@@ -9,19 +9,11 @@ public class GameController : MonoBehaviour {
 		Fighting
 	}
 
-	public enum Direction {
-		Idle,
-		Up,
-		Down,
-		Left,
-		Right
-	}
-
 	public State state;
 	public Player player1;
 	public Player player2;
-	public int ticks;
-	public int ticksPerChoice = 60;
+	public int frames;
+	public int framesPerTick = 60;
 
 	private Vector2 startTouch = Vector2.zero;
 	private Vector2 endTouch = Vector2.zero;
@@ -30,7 +22,7 @@ public class GameController : MonoBehaviour {
 		Debug.Log ("Ok, starting up a game");
 		player1 = new Player ();
 		player2 = new Player ();
-		ticks = 0;
+		frames = 0;
 		state = State.Fighting;
 	}
 
@@ -44,15 +36,15 @@ public class GameController : MonoBehaviour {
 
 	public void FixedUpdate() {
 		if (state == State.Fighting) {
-			if (ticks % ticksPerChoice == 0) {
+			if (frames % framesPerTick == 0) {
 				decisionTime ();
 			}
-			ticks++;
+			frames++;
 		}
 	}
 
 	private void decisionTime() {
-		Debug.Log (player1.state + " vs " + player2.state);
+		Player.Tick (player1, player2);
 	}
 
 	private void handleFightInput() {
@@ -65,6 +57,16 @@ public class GameController : MonoBehaviour {
 			} elif (t.phase == TouchPhase.Ended) {
 				endTouch = t.position;
 			}
+		}
+
+		#elif true
+
+		// remove this and use "else" for testing dragging stuff
+		float horizontal = Input.GetAxis("Horizontal");
+		float vertical = Input.GetAxis("Vertical");
+		if (horizontal != 0 || vertical != 0) {
+			startTouch = Vector2.one;
+			endTouch = Vector2.one + new Vector2(horizontal, vertical);
 		}
 
 		#else
@@ -109,38 +111,10 @@ public class GameController : MonoBehaviour {
 	}
 }
 
-public class Player {
-	public enum State {
-		Idle,
-		Attack1,
-		Attack2,
-		Grab1,
-		Grab2,
-		Block1,
-		Block2,
-		Grabbing,
-		Grabbed,
-		ThrowingDown,
-		ThrownDown,
-		ThrowingUp,
-		ThrownUp,
-		ComboAttackUp,
-		ComboAttackDown,
-		ComboAttackToward,
-		ComboAttackReset,
-		ComboedCounterUp,
-		ComboedCounterDown,
-		ComboedCounterToward,
-		Resetting
-	}
-
-	public State state;
-
-	public void Start() {
-		state = State.Idle;
-	}
-
-	public void Input(GameController.Direction direction) {
-		Debug.Log ("Direction pressed: " + direction);
-	}
+public enum Direction {
+	Idle,
+	Up,
+	Down,
+	Left,
+	Right
 }

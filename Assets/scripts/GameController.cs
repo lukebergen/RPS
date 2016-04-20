@@ -18,12 +18,22 @@ public class GameController : MonoBehaviour {
 	private Vector2 startTouch = Vector2.zero;
 	private Vector2 endTouch = Vector2.zero;
 
+	private GameObject tickIndicator;
+	private TextMesh gameMessage;
+
+	public void Start() {
+		tickIndicator = GameObject.Find ("Tick Indicator");
+		gameMessage = GameObject.Find ("Game Message").GetComponent<TextMesh>();
+	}
+
 	public void StartGame() {
 		Debug.Log ("Ok, starting up a game");
 		player1 = new Player ();
 		player2 = new Player ();
-		frames = 0;
+		frames = -100;
 		state = State.Fighting;
+		tickIndicator.transform.Translate(new Vector3(0.0f, 0.0f, 100.0f));
+		gameMessage.text = "Ready";
 	}
 
 	public void Update() {
@@ -36,8 +46,18 @@ public class GameController : MonoBehaviour {
 
 	public void FixedUpdate() {
 		if (state == State.Fighting) {
-			if (frames % framesPerTick == 0) {
+			if (frames == -1) {
+				gameMessage.text = "Go!";
+			}
+			if (frames == framesPerTick) {
+				if (gameMessage.text != "") {
+					gameMessage.text = "";
+				}
 				decisionTime ();
+				frames = 0;
+			}
+			if (frames == 0) {
+				tickIndicator.transform.Rotate (new Vector3 (0f, 0f, 45));
 			}
 			frames++;
 		}

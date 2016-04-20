@@ -6,6 +6,7 @@ using System.Collections.Generic;
 public class Player {
 
 	public int hp = 20;
+	public static int maxHp = 20;
 
 	public Action currentAction = Action.Idle;
 
@@ -140,12 +141,6 @@ public class Player {
 		}
 	}
 }
-
-//	Dictionary<Player.State, int[]> actions = new Dictionary<Player.State, int[]>
-//	{
-//		{Player.State.Idle, new int[3] {0, 0, 1}},
-//		{Player.State.Attack, new int[3] {0, 1, 1}}
-//	};
 
 public enum Action {
 	Idle,

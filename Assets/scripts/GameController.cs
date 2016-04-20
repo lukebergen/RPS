@@ -13,7 +13,7 @@ public class GameController : MonoBehaviour {
 	public Player player1;
 	public Player player2;
 	public int frames;
-	public int framesPerTick = 60;
+	public int framesPerTick;
 
 	private Vector2 startTouch = Vector2.zero;
 	private Vector2 endTouch = Vector2.zero;
@@ -27,13 +27,20 @@ public class GameController : MonoBehaviour {
 	}
 
 	public void StartGame() {
-		Debug.Log ("Ok, starting up a game");
 		player1 = new Player ();
 		player2 = new Player ();
 		frames = -100;
 		state = State.Fighting;
 		tickIndicator.transform.Translate(new Vector3(0.0f, 0.0f, 100.0f));
 		gameMessage.text = "Ready";
+		updateHealth ();
+	}
+
+	private void endGame() {
+		state = State.Menu;
+		tickIndicator.transform.Translate (new Vector3 (0.0f, 0.0f, -100.0f));
+		GameObject menu = GameObject.Find ("Main Menu");
+		menu.transform.Translate (new Vector3 (0.0f, 0.0f, 100.0f));
 	}
 
 	public void Update() {
@@ -65,6 +72,27 @@ public class GameController : MonoBehaviour {
 
 	private void decisionTime() {
 		Player.Tick (player1, player2);
+		updateHealth ();
+		if (player1.hp == 0 || player2.hp == 0) {
+			if (player1.hp == 0) {
+				gameMessage.text = "Player 1 wins";
+			} else { 
+				gameMessage.text = "Player 2 wins";
+			}
+			endGame ();
+		}
+	}
+
+	private void updateHealth() {
+		GameObject bar = GameObject.Find ("Player1 Health Remaining");
+		float remainingF = ((float)player1.hp / (float)Player.maxHp);
+		bar.transform.localScale = new Vector3(remainingF, 1.0f, 1.0f);
+		bar.transform.localPosition = new Vector3 ((remainingF - 1) * 0.5f, 0.0f, -0.1f);
+
+		bar = GameObject.Find ("Player2 Health Remaining");
+		remainingF = ((float)player2.hp / (float)Player.maxHp);
+		bar.transform.localScale = new Vector3(remainingF, 1.0f, 1.0f);
+		bar.transform.localPosition = new Vector3 ((1 - remainingF) * 0.5f, 0.0f, -0.1f);
 	}
 
 	private void handleFightInput() {

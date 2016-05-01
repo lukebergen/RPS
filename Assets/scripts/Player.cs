@@ -8,96 +8,82 @@ public class Player {
 	public int hp = 20;
 	public static int maxHp = 20;
 
-	public Action currentAction = Action.Idle;
+	public Action currentAction;
 
-	public Direction nextInput = Direction.Idle;
+	public Direction nextInput;
+
+	public Player() {
+		currentAction = new Action(Action.Type.Idle);
+		nextInput = Direction.Idle;
+	}
 
 	public static void Tick(Player player1, Player player2) {
 		player1.figureOutAction ();
 		player2.figureOutActionCpu ();
 
-		// clanking attacks/grabs
-		if ( player1.clanks(player2) || player2.clanks(player1) ){
-			Debug.Log ("Clank");
-			player1.currentAction = Action.Stunned2;
-			player2.currentAction = Action.Stunned2;
-		}
+		Player.ResolveActions (player1, player2);
 
-		// attacking
-		else if (player1.attacks(player2)) {
-			Debug.Log ("Player1 attacks Player2");
-			player2.currentAction = Action.Stunned2;
-			player2.hp -= 1;
-		}
-		else if (player2.attacks(player1)) {
-			Debug.Log ("Player2 attacks Player1");
-			player1.currentAction = Action.Stunned2;
-			player1.hp -= 1;
-		}
-
-		// blocking
-		else if (player1.blocks(player2)) {
-			Debug.Log ("Player1 blocks Player2");
-			player2.currentAction = Action.Stunned2;
-			player1.currentAction = Action.Idle;
-		}
-		else if (player2.blocks(player1)) {
-			Debug.Log ("Player2 blocks Player1");
-			player1.currentAction = Action.Stunned2;
-			player2.currentAction = Action.Idle;
-		}
-
-		// grabbing
-		else if (player1.grabs(player2)) {
-			Debug.Log ("Player1 grabs Player2");
-			player2.currentAction = Action.Stunned2;
-			player1.currentAction = Action.Idle;
-		}
-		else if (player2.grabs(player1)) {
-			Debug.Log ("Player2 grabs Player1");
-			player2.currentAction = Action.Stunned2;
-			player1.currentAction = Action.Idle;
-		}
-
-		player1.nextInput = Direction.Idle;
-		player2.nextInput = Direction.Idle;
+		player1.Tick ();
+		player2.Tick ();
 	}
 
-	private bool clanks(Player other) {
-		return currentAction == Action.Attack1 && other.currentAction == Action.Attack1;
+	public static void ResolveActions(Player p1, Player p2) {
+		Debug.Log (p1.currentAction.name + " VS " + p2.currentAction.name);
+		if (p1.currentAction.name == Action.Type.Attack && p2.currentAction.name == Action.Type.Attack) {
+			// Attack clank
+			p1.currentAction = new Action (Action.Type.AttackClank);
+			p2.currentAction = new Action (Action.Type.AttackClank);
+		} else if (p1.currentAction.name == Action.Type.Block && p2.currentAction.name == Action.Type.Block && p1.currentAction.Active() && p2.currentAction.Active ()) {
+			// Grab clank (not really functionally different from just letting the grabs complete
+			// but possibly useful in future for animations and such
+			p1.currentAction = new Action (Action.Type.Resetting);
+			p2.currentAction = new Action (Action.Type.Resetting);
+		} else if (p1.currentAction.name == Action.Type.Attack && p1.currentAction.Active () && p2.currentAction.Attackable ()) {
+			// p1 attacks p2
+			p2.hp -= 1;
+			p2.currentAction = new Action (Action.Type.Stunned);
+		} else if (p1.currentAction.name == Action.Type.Attack && p1.currentAction.Active () && p2.currentAction.Attackable ()) {
+			// p2 attacks p1
+			p1.hp -= 1;
+			p1.currentAction = new Action (Action.Type.Stunned);
+		} else if (p1.currentAction.name == Action.Type.Block && p1.currentAction.Active () && p2.currentAction.Blockable ()) {
+			// p1 blocks p2
+			p1.currentAction = new Action (Action.Type.Idle);
+			p2.currentAction = new Action (Action.Type.Stunned);
+		} else if (p2.currentAction.name == Action.Type.Block && p2.currentAction.Active () && p1.currentAction.Blockable ()) {
+			// p2 blocks p1
+			p2.currentAction = new Action (Action.Type.Idle);
+			p1.currentAction = new Action (Action.Type.Stunned);
+		} else if (p1.currentAction.name == Action.Type.Grab && p1.currentAction.Active () && p2.currentAction.Grabbable ()) {
+			// p1 grabs p2
+			p1.currentAction = new Action (Action.Type.Grabbing);
+			p2.currentAction = new Action (Action.Type.Grabbed);
+		} else if (p2.currentAction.name == Action.Type.Grab && p2.currentAction.Active () && p1.currentAction.Grabbable ()) {
+			// p2 grabs p1
+			p2.currentAction = new Action (Action.Type.Grabbing);
+			p1.currentAction = new Action (Action.Type.Grabbed);
+		} else if (p1.currentAction.name == Action.Type.DownThrow) {
+			// p1 down throws p2
+			p1.currentAction = new Action (Action.Type.Resetting);
+			p2.currentAction = new Action (Action.Type.Stunned);
+			p2.hp -= 2;
+		} else if (p2.currentAction.name == Action.Type.DownThrow) {
+			// p2 down throws p1
+			p2.currentAction = new Action (Action.Type.Resetting);
+			p1.currentAction = new Action (Action.Type.Stunned);
+			p1.hp -= 2;
+		}
 	}
 
-	private bool attacks(Player other) {
-		return currentAction == Action.Attack1 && other.attackable ();
-	}
-
-	private bool blocks(Player other) {
-		return (currentAction == Action.Block1 || currentAction == Action.Block2) && other.blockable ();
-	}
-
-	private bool grabs(Player other) {
-		return currentAction == Action.Grab1 && other.grabbable ();
-	}
-
-	private bool attackable() {
-		Action[] a = new Action[] { Action.Idle, Action.Attack2, Action.Grab1, Action.Grab2 };
-		return Array.IndexOf (a, currentAction) > -1;
-	}
-
-	private bool blockable() {
-		Action[] a = new Action[] { Action.Attack1 };
-		return Array.IndexOf (a, currentAction) > -1;
-	}
-
-	private bool grabbable() {
-		Action[] a = new Action[] { Action.Idle, Action.Attack2, Action.Grab2, Action.Block1, Action.Block2 };
-		return Array.IndexOf (a, currentAction) > -1;
+	public void Tick() {
+		currentAction.Tick ();
 	}
 
 	public void Input(Direction direction) {
 		nextInput = direction;
 	}
 
+	// TODO: standin for AI at this point.
 	public void figureOutActionCpu() {
 		float rand = UnityEngine.Random.value;
 		if (rand > 0.75) {
@@ -105,51 +91,121 @@ public class Player {
 		} else if (rand > 0.5) {
 			nextInput = Direction.Down;
 		} else if (rand > 0.25) {
-			nextInput = Direction.Right;
+			nextInput = Direction.Toward;
 		} else {
-			nextInput = Direction.Left;
+			nextInput = Direction.Away;
 		}
-
 		figureOutAction ();
 	}
 
 	public void figureOutAction() {
-		// deal with transitions that don't care what the next input is due to being locked into a multi-tick move
-		if (currentAction == Action.Attack1) {
-			currentAction = Action.Attack2;
-		} else if (currentAction == Action.Block1) {
-			currentAction = Action.Block2;
-		} else if (currentAction == Action.Grab1) {
-			currentAction = Action.Grab2;
-		} else if (currentAction == Action.Stunned1) {
-			currentAction = Action.Stunned2;
-		} else {
-			switch (nextInput) {
-			case Direction.Idle:
-				currentAction = Action.Idle;
-				break;
-			case Direction.Right:
-				currentAction = Action.Attack1;
-				break;
-			case Direction.Down:
-				currentAction = Action.Block1;
-				break;
-			case Direction.Up:
-				currentAction = Action.Grab1;
-				break;
+		if (currentAction.Complete ()) {
+			// figure out action based on input
+			if (nextInput == Direction.Up) {
+				currentAction = new Action (Action.Type.Grab);
+			} else if (nextInput == Direction.Away) {
+				currentAction = new Action (Action.Type.Block);
+			} else if (nextInput == Direction.Toward) {
+				currentAction = new Action (Action.Type.Attack);
+			} else if (nextInput == Direction.Down && currentAction.name == Action.Type.Grabbing) {
+				currentAction = new Action (Action.Type.DownThrow);
+			} else {
+				currentAction = new Action (Action.Type.Idle);
 			}
 		}
+		nextInput = Direction.Idle;
 	}
 }
 
-public enum Action {
-	Idle,
-	Attack1,
-	Attack2,
-	Block1,
-	Block2,
-	Grab1,
-	Grab2,
-	Stunned1,
-	Stunned2
+public class Action {
+
+	public enum Type {
+		Idle,
+		Attack,
+		Block,
+		Grab,
+		Grabbing,
+		Grabbed,
+		DownThrow,
+		ComboUp,
+		ComboToward,
+		ComboDown,
+		AttackClank,  // These last four all amount to a single tick of doing nothing
+		GrabClank,    // during which technically the player is "Idle" but unable to act
+		Stunned,      // Attack/Grab clank this amounts to both players resetting to neuatral
+		Resetting     // with a little time to breath since both will be unable to act for 1 tick
+	}
+
+	public Type name;
+	public int currentTick;
+	public int startupTicks;
+	public int activeTicks;
+	public int endLagTicks;
+
+	public Action(Type t) {
+		name = t;
+		currentTick = 0;
+		if (name == Type.Idle) {
+			startupTicks = 0;
+			activeTicks = 0;
+			endLagTicks = 1;
+		} else if (name == Type.Attack) {
+			startupTicks = 0;
+			activeTicks = 1;
+			endLagTicks = 1;
+		} else if (name == Type.Block) {
+			startupTicks = 0;
+			activeTicks = 2;
+			endLagTicks = 0;
+		} else if (name == Type.Grab) {
+			startupTicks = 0;
+			activeTicks = 1;
+			endLagTicks = 0;
+		} else if (name == Type.Grabbed) {
+			startupTicks = 0;
+			activeTicks = 1;
+			endLagTicks = 0;
+		} else if (name == Type.Grabbed) {
+			startupTicks = 0;
+			activeTicks = 1;
+			endLagTicks = 0;
+		} else if (name == Type.DownThrow) {
+			startupTicks = 0;
+			activeTicks = 1;
+			endLagTicks = 0;
+		} else if (name == Type.AttackClank || name == Type.GrabClank || name == Type.Stunned || name == Type.Resetting || name == Type.Grabbed || name == Type.Grabbing) {
+			startupTicks = 0;
+			activeTicks = 0;
+			endLagTicks = 1;
+		}
+	}
+
+	public void Tick() {
+		currentTick++;
+	}
+
+	public bool Attackable() {
+		return (name == Type.Idle) ||
+		(name == Type.Grab) ||
+		(name == Type.Attack && !Active ());
+	}
+
+	public bool Blockable() {
+		return name == Type.Attack && Active ();
+	}
+
+	public bool Grabbable() {
+		return name == Type.Idle ||
+		(name == Type.Attack && !Active ()) ||
+		(name == Type.Grab && !Active ()) ||
+		(name == Type.Block);
+	}
+
+	public bool Active() {
+		return currentTick > startupTicks && currentTick < (startupTicks + activeTicks);
+	}
+
+	public bool Complete() {
+		return currentTick >= startupTicks + activeTicks + endLagTicks;
+	}
 }

@@ -95,6 +95,8 @@ public class GameController : MonoBehaviour {
 		bar.transform.localPosition = new Vector3 ((1 - remainingF) * 0.5f, 0.0f, -0.1f);
 	}
 
+	// Player1 (the human player) is the player on the left for now.
+	// So "Right" is "Toward" and "Left" is "Away"
 	private void handleFightInput() {
 		#if UNITY_IOS || UNITY_ANDROID || UNITY_WP8 || UNITY_IPHONE
 
@@ -142,9 +144,9 @@ public class GameController : MonoBehaviour {
 			} else {
 				if (Mathf.Abs (drag.x) > Mathf.Abs (drag.y)) {
 					if (drag.x < 0) {
-						dir = Direction.Left;
+						dir = Direction.Away;
 					} else {
-						dir = Direction.Right;
+						dir = Direction.Toward;
 					}
 				} else {
 					if (drag.y < 0) {
@@ -163,6 +165,6 @@ public enum Direction {
 	Idle,
 	Up,
 	Down,
-	Left,
-	Right
+	Away,
+	Toward
 }

@@ -13,13 +13,13 @@ public class Player {
 	public Direction nextInput;
 
 	public Player() {
-		currentAction = new Action(Action.Type.Idle);
+		currentAction = new Action(Action.Type.Idle, fromInput: true);
 		nextInput = Direction.Idle;
 	}
 
 	public static void Tick(Player player1, Player player2) {
 		player1.figureOutAction ();
-		player2.figureOutActionCpu ();
+		player2.figureOutAction ();
 
 		Player.ResolveActions (player1, player2);
 
@@ -28,7 +28,20 @@ public class Player {
 	}
 
 	public static void ResolveActions(Player p1, Player p2) {
-		Debug.Log (p1.currentAction.name + " VS " + p2.currentAction.name);
+		string msg = p1.currentAction.name + "(" + p1.currentAction.currentTick + ") (";
+		if (p1.currentAction.Active ()) {
+			msg += "active) VS ";
+		} else {
+			msg += "inactive) VS ";
+		}
+		msg += p2.currentAction.name + "(" + p2.currentAction.currentTick + ") (";
+		if (p2.currentAction.Active ()) {
+			msg += "active)";
+		} else {
+			msg += "inactive)";
+		}
+		Debug.Log (msg);
+
 		if (p1.currentAction.name == Action.Type.Attack && p2.currentAction.name == Action.Type.Attack) {
 			// Attack clank
 			p1.currentAction = new Action (Action.Type.AttackClank);
@@ -42,7 +55,7 @@ public class Player {
 			// p1 attacks p2
 			p2.hp -= 1;
 			p2.currentAction = new Action (Action.Type.Stunned);
-		} else if (p1.currentAction.name == Action.Type.Attack && p1.currentAction.Active () && p2.currentAction.Attackable ()) {
+		} else if (p2.currentAction.name == Action.Type.Attack && p2.currentAction.Active () && p1.currentAction.Attackable ()) {
 			// p2 attacks p1
 			p1.hp -= 1;
 			p1.currentAction = new Action (Action.Type.Stunned);
@@ -102,15 +115,15 @@ public class Player {
 		if (currentAction.Complete ()) {
 			// figure out action based on input
 			if (nextInput == Direction.Up) {
-				currentAction = new Action (Action.Type.Grab);
+				currentAction = new Action (Action.Type.Grab, fromInput: true);
 			} else if (nextInput == Direction.Away) {
-				currentAction = new Action (Action.Type.Block);
+				currentAction = new Action (Action.Type.Block, fromInput: true);
 			} else if (nextInput == Direction.Toward) {
-				currentAction = new Action (Action.Type.Attack);
+				currentAction = new Action (Action.Type.Attack, fromInput: true);
 			} else if (nextInput == Direction.Down && currentAction.name == Action.Type.Grabbing) {
-				currentAction = new Action (Action.Type.DownThrow);
+				currentAction = new Action (Action.Type.DownThrow, fromInput: true);
 			} else {
-				currentAction = new Action (Action.Type.Idle);
+				currentAction = new Action (Action.Type.Idle, fromInput: true);
 			}
 		}
 		nextInput = Direction.Idle;
@@ -142,9 +155,19 @@ public class Action {
 	public int activeTicks;
 	public int endLagTicks;
 
-	public Action(Type t) {
+	public Action(Type t, bool fromInput = false) {
 		name = t;
-		currentTick = 0;
+
+		if (fromInput) {
+			// If we're setting the next action based on input, then act immediately
+			currentTick = 0;
+		} else {
+			// If this action occurred because of e.g. a blocked attack, then leave it to the next
+			// Tick to set us to the starting state of tick 0.
+			// There should exist a better way to do this. TODO: investigate less stupid way of handling
+			// the two situations that cause an action change (input vs interaction effect).
+			currentTick = -1;
+		}
 		if (name == Type.Idle) {
 			startupTicks = 0;
 			activeTicks = 0;
@@ -202,7 +225,7 @@ public class Action {
 	}
 
 	public bool Active() {
-		return currentTick > startupTicks && currentTick < (startupTicks + activeTicks);
+		return currentTick >= startupTicks && currentTick < (startupTicks + activeTicks);
 	}
 
 	public bool Complete() {

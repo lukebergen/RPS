@@ -98,66 +98,78 @@ public class GameController : MonoBehaviour {
 	// Player1 (the human player) is the player on the left for now.
 	// So "Right" is "Toward" and "Left" is "Away"
 	private void handleFightInput() {
-		#if UNITY_IOS || UNITY_ANDROID || UNITY_WP8 || UNITY_IPHONE
-
-		if (Input.touchCount > 0) {
-			Touch t = Input.touches[0];
-			if (t.phase == TouchPhase.Began) {
-				startTouch = t.position;
-			} elif (t.phase == TouchPhase.Ended) {
-				endTouch = t.position;
-			}
+		// TODO: Remove this bit, it's just for debugging (and later might be added back as two player or something)
+		if (Input.GetButton ("Player1Up")) {
+			player1.Input (Direction.Up);
+		} else if (Input.GetButtonDown ("Player1Down")) {
+			player1.Input (Direction.Down);
+		} else if (Input.GetButtonDown ("Player1Toward")) {
+			player1.Input (Direction.Toward);
+		} else if (Input.GetButtonDown ("Player1Away")) {
+			player1.Input (Direction.Away);
 		}
 
-		#elif true
-
-		// remove this and use "else" for testing dragging stuff
-		float horizontal = Input.GetAxis("Horizontal");
-		float vertical = Input.GetAxis("Vertical");
-		if (horizontal != 0 || vertical != 0) {
-			startTouch = Vector2.one;
-			endTouch = Vector2.one + new Vector2(horizontal, vertical);
+		if (Input.GetButton ("Player2Up")) {
+			player2.Input (Direction.Up);
+		} else if (Input.GetButtonDown ("Player2Down")) {
+			player2.Input (Direction.Down);
+		} else if (Input.GetButtonDown ("Player2Toward")) {
+			player2.Input (Direction.Toward);
+		} else if (Input.GetButtonDown ("Player2Away")) {
+			player2.Input (Direction.Away);
 		}
 
-		#else
 
-		if (Input.GetMouseButtonDown(0)) {
-			Vector3 mouse = Input.mousePosition;
-			startTouch = new Vector2(mouse.x, mouse.y);
-		}
-
-		if (Input.GetMouseButtonUp(0) && startTouch != Vector2.zero) {
-			Vector3 mouse = Input.mousePosition;
-			endTouch = new Vector2(mouse.x, mouse.y);
-		}
-
-		#endif
-
-		if (startTouch != Vector2.zero && endTouch != Vector2.zero) {
-			Vector2 drag = endTouch - startTouch;
-			startTouch = Vector2.zero;
-			endTouch = Vector2.zero;
-
-			Direction dir;
-			if (drag == Vector2.zero) {
-				dir = Direction.Idle;
-			} else {
-				if (Mathf.Abs (drag.x) > Mathf.Abs (drag.y)) {
-					if (drag.x < 0) {
-						dir = Direction.Away;
-					} else {
-						dir = Direction.Toward;
-					}
-				} else {
-					if (drag.y < 0) {
-						dir = Direction.Down;
-					} else {
-						dir = Direction.Up;
-					}
-				}
-			}
-			player1.Input(dir);
-		}
+//		#if UNITY_IOS || UNITY_ANDROID || UNITY_WP8 || UNITY_IPHONE
+//
+//		if (Input.touchCount > 0) {
+//			Touch t = Input.touches[0];
+//			if (t.phase == TouchPhase.Began) {
+//				startTouch = t.position;
+//			} elif (t.phase == TouchPhase.Ended) {
+//				endTouch = t.position;
+//			}
+//		}
+//
+//		#else
+//
+//		if (Input.GetMouseButtonDown(0)) {
+//			Vector3 mouse = Input.mousePosition;
+//			startTouch = new Vector2(mouse.x, mouse.y);
+//		}
+//
+//		if (Input.GetMouseButtonUp(0) && startTouch != Vector2.zero) {
+//			Vector3 mouse = Input.mousePosition;
+//			endTouch = new Vector2(mouse.x, mouse.y);
+//		}
+//
+//		#endif
+//
+//		if (startTouch != Vector2.zero && endTouch != Vector2.zero) {
+//			Vector2 drag = endTouch - startTouch;
+//			startTouch = Vector2.zero;
+//			endTouch = Vector2.zero;
+//
+//			Direction dir;
+//			if (drag == Vector2.zero) {
+//				dir = Direction.Idle;
+//			} else {
+//				if (Mathf.Abs (drag.x) > Mathf.Abs (drag.y)) {
+//					if (drag.x < 0) {
+//						dir = Direction.Away;
+//					} else {
+//						dir = Direction.Toward;
+//					}
+//				} else {
+//					if (drag.y < 0) {
+//						dir = Direction.Down;
+//					} else {
+//						dir = Direction.Up;
+//					}
+//				}
+//			}
+//			player2.Input(dir);
+//		}
 	}
 }
 

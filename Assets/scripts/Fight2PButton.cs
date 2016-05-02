@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class FightCPUButton : MonoBehaviour {
+public class Fight2PButton : MonoBehaviour {
 	private GameController controller;
 	private GameObject menu;
 
@@ -16,7 +16,6 @@ public class FightCPUButton : MonoBehaviour {
 
 	void OnMouseDown() {
 		if (controller.state == GameController.State.Menu) {
-			Debug.Log ("Click!");
 			menu.transform.Translate (new Vector3 (0.0f, 0.0f, -100.0f)); // just move the menu way back behind the camera
 			controller.StartGame();
 		}

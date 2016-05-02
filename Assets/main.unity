@@ -835,7 +835,7 @@ GameObject:
   - 23: {fileID: 1285398708}
   - 114: {fileID: 1285398707}
   m_Layer: 0
-  m_Name: Fight CPU Button
+  m_Name: 2P Fight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1103,7 +1103,7 @@ GameObject:
   - 23: {fileID: 1698406930}
   - 102: {fileID: 1698406929}
   m_Layer: 0
-  m_Name: Fight CPU Button Text
+  m_Name: 2P Fight Button
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1128,12 +1128,12 @@ TextMesh:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1698406927}
-  m_Text: Fight CPU
+  m_Text: "2P Fight\t"
   m_OffsetZ: 0
   m_CharacterSize: 1
   m_LineSpacing: 1
   m_Anchor: 0
-  m_Alignment: 0
+  m_Alignment: 1
   m_TabSize: 4
   m_FontSize: 0
   m_FontStyle: 0

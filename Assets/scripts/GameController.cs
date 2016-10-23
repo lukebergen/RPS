@@ -56,7 +56,11 @@ public class GameController : MonoBehaviour {
 			if (frames == -1) {
 				gameMessage.text = "Go!";
 			}
-			if (frames == framesPerTick) {
+
+			bool doTick = frames == framesPerTick;
+			// DEBUGGERY. Remove in production.
+			doTick = Input.GetKeyUp (KeyCode.Space);
+			if (doTick) {
 				if (gameMessage.text != "") {
 					gameMessage.text = "";
 				}

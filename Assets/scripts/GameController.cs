@@ -27,9 +27,9 @@ public class GameController : MonoBehaviour {
 	}
 
 	public void StartGame() {
-		player1 = new Player ();
-		player2 = new Player ();
-		frames = -100;
+		player1 = new Player ("Player1");
+		player2 = new Player ("Player2");
+		frames = -2; //-100;
 		state = State.Fighting;
 		tickIndicator.transform.Translate(new Vector3(0.0f, 0.0f, 100.0f));
 		gameMessage.text = "Ready";
@@ -75,7 +75,7 @@ public class GameController : MonoBehaviour {
 	}
 
 	private void decisionTime() {
-		Player.Tick (player1, player2);
+		Player.ResolveActions (player1, player2);
 		updateHealth ();
 		if (player1.hp == 0 || player2.hp == 0) {
 			if (player1.hp == 0) {

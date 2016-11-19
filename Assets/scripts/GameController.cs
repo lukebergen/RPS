@@ -80,9 +80,9 @@ public class GameController : MonoBehaviour {
 		updateHealth ();
 		if (player1.hp == 0 || player2.hp == 0) {
 			if (player1.hp == 0) {
-				gameMessage.text = "Player 1 wins";
-			} else { 
 				gameMessage.text = "Player 2 wins";
+			} else {
+				gameMessage.text = "Player 1 wins";
 			}
 			endGame ();
 		}

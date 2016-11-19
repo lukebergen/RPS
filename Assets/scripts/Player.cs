@@ -33,6 +33,7 @@ public class Player {
 	public string Name; // just a label for the player for debug logging
 	public int hp = 20;
 	public static int maxHp = 20;
+	public GameObject gameObject;
 
 	public Action currentAction;
 
@@ -45,6 +46,7 @@ public class Player {
 		currentAction = Action.Idle;
 		nextInput = Direction.Idle;
 		this.comboState = comboState;
+		this.gameObject = GameObject.Find (name);
 	}
 
 	public void Conditions (Player other) {

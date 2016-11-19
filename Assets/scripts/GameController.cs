@@ -14,6 +14,7 @@ public class GameController : MonoBehaviour {
 	public Player player2;
 	public int frames;
 	public int framesPerTick;
+	public GameObject ComboCounter;
 
 	private Vector2 startTouch = Vector2.zero;
 	private Vector2 endTouch = Vector2.zero;
@@ -27,7 +28,7 @@ public class GameController : MonoBehaviour {
 	}
 
 	public void StartGame() {
-		ComboState comboState = new ComboState ();
+		ComboState comboState = new ComboState (ComboCounter);
 		player1 = new Player ("Player1", comboState);
 		player2 = new Player ("Player2", comboState);
 		frames = -2; //-100;

@@ -5,16 +5,19 @@ public class ComboState {
 	private bool active;
 	private int damageCounter;
 	private Player comboer;
+	private GameObject counter;
 
-	public ComboState() {
+	public ComboState(GameObject counter) {
 		active = false;
 		damageCounter = 0;
 		comboer = null;
+		this.counter = counter;
 	}
 
 	public void Start(Player comboer) {
 		active = true;
-		this.comboer = comboer;
+		this.SetComboer (comboer);
+		updateText ("COMBO\n0");
 		damageCounter = 0;
 	}
 
@@ -23,6 +26,7 @@ public class ComboState {
 		this.active = false;
 		this.damageCounter = 0;
 		this.comboer = null;
+		updateText ("");
 		return finisherDamage;
 	}
 
@@ -32,10 +36,14 @@ public class ComboState {
 
 	public void Extend(int damage) {
 		damageCounter += damage;
+		updateText ("COMBO\n" + damageCounter);
 	}
 
 	public void SetComboer(Player p) {
-		comboer = p;
+		this.comboer = p;
+		Vector3 newPos = p.gameObject.transform.position;
+		newPos.y += 2.0f;
+		this.counter.transform.position = newPos;
 	}
 
 	public bool IsComboer(Player p) {
@@ -44,5 +52,10 @@ public class ComboState {
 
 	public bool Active() {
 		return active;
+	}
+
+	private void updateText(string text) {
+		TextMesh tm = this.counter.GetComponent<TextMesh> ();
+		tm.text = text;
 	}
 }

@@ -21,6 +21,7 @@ public class Player {
 		ComboUp,
 		ComboToward,
 		ComboDown,
+		ComboIdle,
 
 		// Stunned states
 		Grabbed,         // Stunned because currently being grabbed
@@ -37,39 +38,70 @@ public class Player {
 
 	public Direction nextInput;
 
-	public Player(string name) {
+	private ComboState comboState;
+
+	public Player(string name, ComboState comboState) {
 		Name = name;
 		currentAction = Action.Idle;
 		nextInput = Direction.Idle;
+		this.comboState = comboState;
 	}
 
-	public static void ResolveActions(Player p1, Player p2) {
-		// Based on inputs figure out what the player is doing this tick
-		p1.figureOutAction ();
-		p2.figureOutAction ();
-
-		// Announce the decisions to the log
-		Debug.Log (p1.currentAction + " vs " + p2.currentAction);
-
-		// Now technically they're still in stunned states, but that effectively means that
-		// they are idle for the purposes of considering conditions. Therefore...
-		p1.resetFromStun();
-		p2.resetFromStun();
-
-		// And now that everybody's currentAction has been set, consider who wins
-		// and what the results of that are. The winner determines what the result is
-		conditions (p1, p2);
-		conditions (p2, p1);
-	}
-
-	private static void conditions (Player p1, Player p2) {
-		// Since this gets called for each player, figure this out from p1's perspective
-		// And let the winner determine everybodys next state/health-loss/etc...
+	public void Conditions (Player other) {
+		// Since this gets called for each player, figure this out from `this` players
+		// perspective and let the winner determine everybodys next state/health-loss/etc...
 		// so we don't end up with double dipping. This is super-not-extendable but it's
 		// simple for now.
+		if (comboState.Active ()) {
+			comboConditions (other);
+		} else {
+			nonComboConditions (other);
+		}
+	}
+
+	private void comboConditions(Player p2) {
+		Player p1 = this;
+		if (comboState.IsComboer(p1)) {
+			// up
+			if (p1.currentAction == Action.ComboUp) {
+				if (p2.currentAction == Action.ComboUp) {
+					// REVERSAL
+					comboState.SetComboer (p2);
+				} else {
+					// EXTENSION
+					comboState.Extend (1);
+					p2.hp -= 1;
+				}
+			} else if (p1.currentAction == Action.ComboToward) {
+				if (p2.currentAction == Action.ComboToward) {
+					// REVERSAL
+					comboState.SetComboer (p2);
+				} else {
+					// EXTENSION
+					comboState.Extend (1);
+					p2.hp -= 1;
+				}
+			} else if (p1.currentAction == Action.ComboDown) {
+				if (p2.currentAction == Action.ComboDown) {
+					// REVERSAL FINISHER
+					comboState.SetComboer (p2);
+					// do finisher damage and finish the combo
+					p1.hp -= comboState.Finish();
+				} else {
+					// FINISHER
+					p2.hp -= comboState.Finish();
+				}
+			} else {
+				comboState.Finish ();  // since we're just resetting to neutral, the finisher damage applies to nobody
+			}
+		}
+	}
+
+	private void nonComboConditions(Player p2) {
+		Player p1 = this;		
 		if (p1.currentAction == Action.Attack) {
 			if (p2.currentAction == Action.Attack) {
-				// TIE
+				// TIE1
 			} else if (p2.currentAction == Action.Block) {
 				// LOSE
 			} else if (p2.currentAction == Action.Grab) {
@@ -104,6 +136,14 @@ public class Player {
 				p1.currentAction = Action.Grabbing;
 				p2.currentAction = Action.Grabbed;
 			}
+		} else if (p1.currentAction == Action.DownThrow) {
+			// This can only happen if we're in a grab - grabbed situation
+			// No possible retort from opponent so just do the down throw
+			p2.hp -= 2;
+		} else if (p1.currentAction == Action.UpThrow) {
+			// This can only happen if we're in a grab - grabbed situation
+			// No possible retort from opponent so just do the up throw
+			comboState.Start (p1);
 		}
 	}
 
@@ -136,18 +176,30 @@ public class Player {
 	public void figureOutAction() {
 		if (ableToAct()) {
 			// figure out action based on input
-			if (nextInput == Direction.Down && currentAction == Action.Grabbing) {
-				currentAction = Action.DownThrow;
-			} else if (nextInput == Direction.Up && currentAction == Action.Grabbing) {
-				currentAction = Action.UpThrow;
-			} else if (nextInput == Direction.Up) {
-				currentAction = Action.Grab;
-			} else if (nextInput == Direction.Away) {
-				currentAction = Action.Block;
-			} else if (nextInput == Direction.Toward) {
-				currentAction = Action.Attack;
+			if (comboState.Active()) {
+				if (nextInput == Direction.Down) {
+					currentAction = Action.ComboDown;
+				} else if (nextInput == Direction.Toward) {
+					currentAction = Action.ComboToward;
+				} else if (nextInput == Direction.Up) {
+					currentAction = Action.ComboUp;
+				} else {
+					currentAction = Action.ComboIdle;
+				}
 			} else {
-				currentAction = Action.Idle;
+				if (nextInput == Direction.Down && currentAction == Action.Grabbing) {
+					currentAction = Action.DownThrow;
+				} else if (nextInput == Direction.Up && currentAction == Action.Grabbing) {
+					currentAction = Action.UpThrow;
+				} else if (nextInput == Direction.Up) {
+					currentAction = Action.Grab;
+				} else if (nextInput == Direction.Away) {
+					currentAction = Action.Block;
+				} else if (nextInput == Direction.Toward) {
+					currentAction = Action.Attack;
+				} else {
+					currentAction = Action.Idle;
+				}
 			}
 		}
 		nextInput = Direction.Idle;

@@ -27,8 +27,9 @@ public class GameController : MonoBehaviour {
 	}
 
 	public void StartGame() {
-		player1 = new Player ("Player1");
-		player2 = new Player ("Player2");
+		ComboState comboState = new ComboState ();
+		player1 = new Player ("Player1", comboState);
+		player2 = new Player ("Player2", comboState);
 		frames = -2; //-100;
 		state = State.Fighting;
 		tickIndicator.transform.Translate(new Vector3(0.0f, 0.0f, 100.0f));
@@ -75,7 +76,7 @@ public class GameController : MonoBehaviour {
 	}
 
 	private void decisionTime() {
-		Player.ResolveActions (player1, player2);
+		resolveActions (player1, player2);
 		updateHealth ();
 		if (player1.hp == 0 || player2.hp == 0) {
 			if (player1.hp == 0) {
@@ -85,6 +86,25 @@ public class GameController : MonoBehaviour {
 			}
 			endGame ();
 		}
+	}
+
+	private void resolveActions(Player p1, Player p2) {
+		// Based on inputs figure out what the player is doing this tick
+		p1.figureOutAction ();
+		p2.figureOutAction ();
+
+		// Announce the decisions to the log
+		Debug.Log (p1.currentAction + " vs " + p2.currentAction);
+
+		// Now technically they're still in stunned states, but that effectively means that
+		// they are idle for the purposes of considering conditions. Therefore...
+		p1.resetFromStun();
+		p2.resetFromStun();
+
+		// And now that everybody's currentAction has been set, consider who wins
+		// and what the results of that are. The winner determines what the result is
+		p1.Conditions(p2); // conditions (p1, p2);
+		p2.Conditions(p1); // conditions (p2, p1);
 	}
 
 	private void updateHealth() {
